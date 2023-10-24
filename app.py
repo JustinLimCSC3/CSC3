@@ -12,36 +12,36 @@ class CountryQuizApp(tk.Tk):
         self.default_font = font.nametofont("TkDefaultFont")
         self.default_font.configure(family="Gaegu", size=12)
 
+        self.user_age = None  # Initialize user age
+
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        self.selected_category = None
         self.current_question = 0
-        self.correct_answers = 0  # Added to keep track of correct answers
 
-        for F in (MainPage, QuizPage, ResultsPage):
+        # Define and create frames for different pages
+        for F in (AgePage, MainPage, QuizPage, ResultsPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
-        self.show_frame(MainPage)
+        self.show_frame(AgePage)
 
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()
 
+    def set_user_age(self, age):
+        self.user_age = age
+
     def show_results(self, correct_answers, total_questions):
-        self.correct_answers = correct_answers  # Store correct answers
         self.frames[ResultsPage].update_results(correct_answers, total_questions)
         self.show_frame(ResultsPage)
 
-    def reset_quiz(self):
-        self.controller.reset_quiz_progress()
-        self.show_question(0)
-
+# AgePage: Get user's age
 class AgePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -73,6 +73,7 @@ class AgePage(tk.Frame):
         except ValueError:
             messagebox.showerror("Invalid Input", "Please enter a valid age.")
 
+# MainPage: Start the quiz
 class MainPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -92,6 +93,7 @@ class MainPage(tk.Frame):
     def start_quiz(self):
         self.controller.show_frame(QuizPage)
 
+# ResultsPage: Display quiz results
 class ResultsPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -104,8 +106,8 @@ class ResultsPage(tk.Frame):
         self.result_label = tk.Label(self, text="", font=("Gaegu", 14))
         self.result_label.pack(pady=10)
 
-        self.retry_button = tk.Button(self, text="Retry Quiz", font=("Gaegu", 14), command=self.retry_quiz)
-        self.retry_button.pack(pady=10)
+        self.back_button = tk.Button(self, text="Back to Main Menu", font=("Gaegu", 14), command=self.back_to_main_menu)
+        self.back_button.pack(pady=10)
 
         self.exit_button = tk.Button(self, text="Exit", font=("Gaegu", 14), command=self.controller.quit)
         self.exit_button.pack(pady=10)
@@ -113,10 +115,11 @@ class ResultsPage(tk.Frame):
     def update_results(self, correct_answers, total_questions):
         self.result_label.config(text=f"You got {correct_answers} out of {total_questions} questions correct.")
 
-    def reset_quiz(self):
-        self.controller.reset_quiz_progress()
-        self.show_question(0)
+    def back_to_main_menu(self):
+        self.controller.current_question = 0  # Reset question index
+        self.controller.show_frame(MainPage)
 
+# QuizPage: Display and manage quiz questions
 class QuizPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -133,7 +136,6 @@ class QuizPage(tk.Frame):
             {"question": "This country is known for its ancient pyramids", "answers": ["Egypt", "Brazil", "India", "Russia"], "correct": "Egypt"},
             {"question": "This 'boot-shaped' country is known for its Colosseum and leaning tower.", "answers": ["Italy", "France", "Spain", "China"], "correct": "Italy"},
             {"question": "With the highest population in the world, this country is known for its Great Wall.", "answers": ["China", "USA", "Japan", "Mexico"], "correct": "China"}
-            # Add more questions here...
         ]
 
         self.correct_answers = 0
